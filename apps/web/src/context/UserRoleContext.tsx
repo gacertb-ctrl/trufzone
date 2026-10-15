@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getMe, logout as logoutApi } from '@/services/api';
 
-export type UserRoleType = 'TURF_OWNER' | 'TURF_ADMIN' | 'STAFF' | 'PLAYER' | 'ADMIN';
+export type UserRoleType = 'TURF_OWNER' | 'TURF_ADMIN' | 'STAFF' | 'PLAYER' | 'ADMIN' | 'ADVERTISER';
+
 
 export interface UserPersona {
   id: string;
@@ -96,6 +97,21 @@ export const USER_PERSONAS: Record<string, UserPersona> = {
     badgeBg: 'bg-purple-500/10 border-purple-500/30 text-purple-400',
     description: 'Multi-turf system oversight, partner verification, database connection monitoring, platform health & diagnostics.',
     permissions: ['SUPERADMIN', 'ALL_ACCESS', 'SYSTEM_DIAGNOSTICS', 'MULTI_TENANT_AUDIT']
+  },
+  ADVERTISER: {
+    id: 'adv-1',
+    name: 'Sponsor Partner',
+    role: 'ADVERTISER',
+    title: 'Brand Marketing & Sponsorship Director',
+    roleBadge: '📢 Advertiser / Partner',
+    venueName: 'Nellai Sports Sponsorship Network',
+    phone: '+91 98421 00003',
+    email: 'sponsors@turfhub.in',
+    avatar: 'SP',
+    themeColor: 'text-sky-400',
+    badgeBg: 'bg-sky-500/10 border-sky-500/30 text-sky-400',
+    description: 'Advertiser portal: create and monitor sports banner sponsorships, venue promotions, impression analytics, and target links.',
+    permissions: ['VIEW_ADS', 'CREATE_ADS', 'MANAGE_ADS', 'VIEW_AD_ANALYTICS']
   }
 };
 
@@ -113,10 +129,12 @@ interface UserRoleContextType {
   isStaff: boolean;
   isPlayer: boolean;
   isAdmin: boolean;
+  isAdvertiser: boolean;
   canViewFinancials: boolean;
   canManagePricing: boolean;
   canOperateGround: boolean;
 }
+
 
 const UserRoleContext = createContext<UserRoleContextType | undefined>(undefined);
 
@@ -259,6 +277,7 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
   const isStaff = currentRole === 'STAFF' && isAuthenticated;
   const isPlayer = currentRole === 'PLAYER' && isAuthenticated;
   const isAdmin = currentRole === 'ADMIN' && isAuthenticated;
+  const isAdvertiser = currentRole === 'ADVERTISER' && isAuthenticated;
 
   const canViewFinancials = (isOwner || isAdmin) && isAuthenticated;
   const canManagePricing = (isOwner || isAdmin) && isAuthenticated;
@@ -278,11 +297,13 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
         isStaff,
         isPlayer,
         isAdmin,
+        isAdvertiser,
         canViewFinancials,
         canManagePricing,
         canOperateGround
       }}
     >
+
       {children}
     </UserRoleContext.Provider>
   );

@@ -26,7 +26,7 @@ const HOURS = Array.from({ length: 17 }, (_, i) => i + 6); // 6 AM to 10 PM
 export default function CalendarPage() {
   const router = useRouter();
   const { isAuthenticated, canManagePricing, isOwner, isAdmin, isStaff } = useUserRole();
-  const [selectedDate, setSelectedDate] = useState(new Date('2026-09-08'));
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [viewMode, setViewMode] = useState<'day' | '3day' | 'week'>('day');
   const [selectedTurfFilter, setSelectedTurfFilter] = useState<string>('all');
   const [selectedSportFilter, setSelectedSportFilter] = useState<string>('all');
@@ -185,7 +185,7 @@ export default function CalendarPage() {
           </div>
 
           <button
-            onClick={() => setSelectedDate(new Date('2026-09-08'))}
+            onClick={() => setSelectedDate(new Date())}
             className="px-3 py-1.5 rounded-xl border border-border text-xs font-bold hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
           >
             Today

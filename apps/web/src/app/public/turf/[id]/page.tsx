@@ -97,7 +97,23 @@ export default function PublicTurfMarketplacePage() {
   }, [turfId]);
 
   const { user } = useUserRole();
-  const [selectedDate, setSelectedDate] = useState('2026-09-08');
+  const availableDates = React.useMemo(() => {
+    const list = [];
+    const now = new Date();
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    for (let i = 0; i < 3; i++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() + i);
+      const iso = d.toISOString().split('T')[0];
+      const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
+      const subtitle = `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
+      list.push({ label, subtitle, date: iso });
+    }
+    return list;
+  }, []);
+
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [selectedSlot, setSelectedSlot] = useState('6:00 PM – 7:00 PM');
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [bookingSuccess, setBookingSuccess] = useState(false);
@@ -292,6 +308,9 @@ export default function PublicTurfMarketplacePage() {
               src={turf.images[activePhotoIdx] || turf.image} 
               alt={turf.name}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1200';
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
             
@@ -335,7 +354,14 @@ export default function PublicTurfMarketplacePage() {
                   activePhotoIdx === i ? 'border-emerald-500 scale-105' : 'border-zinc-800 opacity-60 hover:opacity-100'
                 )}
               >
-                <img src={img} alt="" className="w-full h-full object-cover" />
+                <img 
+                  src={img} 
+                  alt="" 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=400';
+                  }}
+                />
               </button>
             ))}
           </div>
@@ -464,14 +490,20 @@ export default function PublicTurfMarketplacePage() {
 
               {/* Date Selection */}
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-zinc-400 block mb-2">
-                  Select Date
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { label: 'Today', date: '2026-09-08', day: 'Tue' },
-                    { label: 'Tomorrow', date: '2026-09-09', day: 'Wed' },
-                  ].map(d => (
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                    Select Date
+                  </label>
+                  <input 
+                    type="date"
+                    value={selectedDate}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="text-[11px] bg-zinc-800 text-zinc-200 border border-zinc-700 rounded-lg px-2 py-0.5 focus:outline-hidden focus:border-emerald-500"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {availableDates.map(d => (
                     <button
                       key={d.date}
                       onClick={() => setSelectedDate(d.date)}
@@ -483,7 +515,7 @@ export default function PublicTurfMarketplacePage() {
                       )}
                     >
                       <p className="text-xs font-bold">{d.label}</p>
-                      <p className="text-[10px] opacity-80">{d.day}, Sep {d.date.split('-')[2]}</p>
+                      <p className="text-[10px] opacity-80">{d.subtitle}</p>
                     </button>
                   ))}
                 </div>

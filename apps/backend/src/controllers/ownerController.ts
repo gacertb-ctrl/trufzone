@@ -326,8 +326,8 @@ export const blockSlot = async (req: AuthRequest, res: Response) => {
     if (!turf) {
       return res.status(404).json({ success: false, message: 'Turf not found' });
     }
-    if (req.user.role !== 'ADMIN' && turf.ownerId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Forbidden - You do not own this turf' });
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'STAFF' && req.user.role !== 'TURF_ADMIN' && turf.ownerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Forbidden - You do not own or manage this turf' });
     }
 
     const blockDate = new Date(date || Date.now());
@@ -366,7 +366,7 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    if (req.user.role !== 'ADMIN') {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'STAFF' && req.user.role !== 'TURF_ADMIN') {
       const turfOwnerId = (booking.turfId as any)?.ownerId?.toString();
       if (turfOwnerId && turfOwnerId !== req.user._id.toString()) {
         return res.status(403).json({ success: false, message: 'Forbidden - You do not own this turf booking' });
@@ -454,14 +454,68 @@ export const createTurf = async (req: AuthRequest, res: Response) => {
   try {
     const turfData = req.body;
     turfData.ownerId = req.user._id;
+
+    if (!turfData.location || !Array.isArray(turfData.location.coordinates) || turfData.location.coordinates.length < 2) {
+      turfData.location = {
+        type: 'Point',
+        coordinates: [77.7567, 8.7139] // Default coordinates for Tirunelveli
+      };
+    }
+
     const turf = new Turf(turfData);
     await turf.save();
     res.status(201).json({ success: true, data: turf, message: 'Turf created successfully' });
   } catch (error) {
-    console.error(error);
+    console.error('createTurf error:', error);
     res.status(500).json({ success: false, message: 'Error creating turf' });
   }
 };
+
+export const updateTurf = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const turf = await Turf.findById(id);
+    if (!turf) {
+      return res.status(404).json({ success: false, message: 'Turf venue not found' });
+    }
+
+    if (req.user?.role !== 'ADMIN' && turf.ownerId.toString() !== req.user?._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Forbidden: You do not own this turf venue' });
+    }
+
+    const updated = await Turf.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true }
+    );
+    return res.status(200).json({ success: true, message: 'Turf venue updated successfully', data: updated });
+  } catch (error) {
+    console.error('updateTurf error:', error);
+    return res.status(500).json({ success: false, message: 'Error updating turf venue' });
+  }
+};
+
+export const deleteTurf = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const turf = await Turf.findById(id);
+    if (!turf) {
+      return res.status(404).json({ success: false, message: 'Turf venue not found' });
+    }
+
+    if (req.user?.role !== 'ADMIN' && turf.ownerId.toString() !== req.user?._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Forbidden: You do not own this turf venue' });
+    }
+
+    await Turf.findByIdAndDelete(id);
+    await TurfSlot.deleteMany({ turfId: id });
+    return res.status(200).json({ success: true, message: 'Turf venue deleted successfully' });
+  } catch (error) {
+    console.error('deleteTurf error:', error);
+    return res.status(500).json({ success: false, message: 'Error deleting turf venue' });
+  }
+};
+
 
 export const getOwnerTurfs = async (req: AuthRequest, res: Response) => {
   try {
@@ -492,8 +546,15 @@ export const generateSlots = async (req: AuthRequest, res: Response) => {
     }
 
     const slots = [];
-    let current = new Date(`${date}T${startTime}`);
-    const end = new Date(`${date}T${endTime}`);
+    const sTime = startTime ? (startTime.length === 5 ? `${startTime}:00` : startTime) : '06:00:00';
+    const eTime = endTime ? (endTime.length === 5 ? `${endTime}:00` : endTime) : '22:00:00';
+    let current = new Date(`${date}T${sTime}`);
+    let end = new Date(`${date}T${eTime}`);
+
+    if (isNaN(current.getTime()) || isNaN(end.getTime())) {
+      current = new Date(`${date}T06:00:00`);
+      end = new Date(`${date}T22:00:00`);
+    }
 
     while (current < end) {
       const next = new Date(current.getTime() + (intervalMinutes || 60) * 60000);
@@ -514,7 +575,7 @@ export const generateSlots = async (req: AuthRequest, res: Response) => {
     const createdSlots = await TurfSlot.insertMany(slots);
     res.status(201).json({ success: true, data: createdSlots, message: `${createdSlots.length} slots generated successfully` });
   } catch (error) {
-    console.error(error);
+    console.error('generateSlots error:', error);
     res.status(500).json({ success: false, message: 'Error generating slots' });
   }
 };
@@ -734,7 +795,7 @@ export const updateTournamentTeamStatus = async (req: AuthRequest, res: Response
     }
 
     team.status = status;
-    tournament.registeredCount = tournament.registeredTeams.filter(t => t.status === 'CONFIRMED' || t.status === 'APPROVED').length;
+    tournament.registeredCount = tournament.registeredTeams.filter(t => t.status !== 'CONFIRMED' || t.status === 'APPROVED').length;
     await tournament.save();
 
     res.status(200).json({ success: true, message: `Team status updated to ${status}`, data: tournament });
@@ -823,4 +884,3 @@ export const getOwnerStaff = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ success: false, message: 'Failed to fetch staff' });
   }
 };
-

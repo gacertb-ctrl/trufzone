@@ -173,6 +173,10 @@ export const getOwnerTurfs = (params?: { sport?: string }) =>
 export const getAllSports = () =>
   api.get<{ success: boolean; data: string[] }>('/turfs/sports/all');
 export const createTurf = (data: Partial<ITurf>) => api.post<{ success: boolean; data: ITurf }>('/owner/turfs', data);
+export const updateOwnerTurf = (id: string, data: any) =>
+  api.put<{ success: boolean; message: string; data: any }>(`/owner/turfs/${id}`, data);
+export const deleteOwnerTurf = (id: string) =>
+  api.delete<{ success: boolean; message: string }>(`/owner/turfs/${id}`);
 export const generateSlots = (data: any) => api.post<{ success: boolean; data: ITurfSlot[] }>('/owner/slots', data);
 export const blockSlot = (data: { turfId: string; date?: string; timeSlot?: string; reason?: string }) =>
   api.post<{ success: boolean; message: string; data: any }>('/owner/slots/block', data);
@@ -222,3 +226,14 @@ export const getOwnerReports = () => api.get<{
 
 // --- Staff ---
 export const getOwnerStaff = () => api.get<{ success: boolean; data: any[] }>('/owner/staff');
+
+// --- Advertisements ---
+export const getAdvertisements = () => api.get<{ success: boolean; data: any[] }>('/ads');
+export const createAdvertisement = (data: any) =>
+  api.post<{ success: boolean; message: string; data: any }>('/ads', data);
+export const updateAdvertisement = (id: string, data: any) =>
+  api.put<{ success: boolean; message: string; data: any }>(`/ads/${id}`, data);
+export const deleteAdvertisement = (id: string) =>
+  api.delete<{ success: boolean; message: string }>(`/ads/${id}`);
+export const getPublicActiveAds = () => api.get<{ success: boolean; data: any[] }>('/ads/public');
+

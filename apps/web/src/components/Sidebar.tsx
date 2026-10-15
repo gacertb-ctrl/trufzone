@@ -8,7 +8,7 @@ import {
   Users, IndianRupee, Tag, Star, BarChart3, 
   Trophy, ShieldHalf, UserCircle2, 
   Settings, HelpCircle, Bell, LogOut,
-  MapPin, Sparkles, CreditCard, UserCheck, LogIn
+  MapPin, Sparkles, CreditCard, UserCheck, LogIn, Megaphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/context/UserRoleContext';
@@ -62,7 +62,8 @@ export default function Sidebar() {
   const roleTag = 
     currentRole === 'TURF_OWNER' || currentRole === 'TURF_ADMIN' ? 'OWNER' : 
     currentRole === 'STAFF' ? 'STAFF' : 
-    currentRole === 'PLAYER' ? 'PLAYER' : 'ADMIN';
+    currentRole === 'PLAYER' ? 'PLAYER' : 
+    currentRole === 'ADVERTISER' ? 'ADVERTISER' : 'ADMIN';
 
   // Role-specific navigation items
   const navGroups = currentRole === 'PLAYER' ? [
@@ -77,6 +78,25 @@ export default function Sidebar() {
       title: 'COMMUNITY',
       items: [
         { name: 'My Teams', href: '/teams', icon: ShieldHalf },
+        { name: 'Tournaments', href: '/tournaments', icon: Trophy },
+      ]
+    },
+    {
+      title: 'SUPPORT',
+      items: [
+        { name: 'Help & Support', href: '/support', icon: HelpCircle },
+      ]
+    }
+  ] : currentRole === 'ADVERTISER' ? [
+    {
+      title: 'ADVERTISER HUB',
+      items: [
+        { name: 'Campaign Manager', href: '/advertisements', icon: Megaphone },
+      ]
+    },
+    {
+      title: 'COMMUNITY & NETWORK',
+      items: [
         { name: 'Tournaments', href: '/tournaments', icon: Trophy },
       ]
     },
@@ -108,6 +128,7 @@ export default function Sidebar() {
         { name: 'Help & Support', href: '/support', icon: HelpCircle },
       ]
     }
+
   ] : [
     // TURF_OWNER / TURF_ADMIN / ADMIN
     {
@@ -135,9 +156,11 @@ export default function Sidebar() {
         { name: 'Tournaments', href: '/tournaments', icon: Trophy },
         { name: 'Ground Staff', href: '/staff', icon: UserCheck },
         { name: 'Payments', href: '/payments', icon: CreditCard },
+        ...(currentRole === 'ADMIN' ? [{ name: 'Advertisements', href: '/advertisements', icon: Megaphone }] : []),
         { name: 'Notifications', href: '/notifications', icon: Bell },
       ]
     },
+
     {
       title: 'SYSTEM',
       items: [
@@ -209,6 +232,19 @@ export default function Sidebar() {
             </div>
             <p className="text-[10px] text-muted-foreground">
               Vannarpettai Ground Counter · Match Check-in & Walk-ins
+            </p>
+          </div>
+        )}
+
+        {/* Special Advertiser Partner banner if advertiser */}
+        {currentRole === 'ADVERTISER' && (
+          <div className="p-3 rounded-2xl bg-primary/10 border border-primary/25 space-y-1.5">
+            <div className="flex items-center gap-1.5 text-primary text-xs font-black">
+              <Megaphone className="w-3.5 h-3.5" />
+              <span>Sponsorship Partner</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Run targeted banner campaigns across player booking flows.
             </p>
           </div>
         )}

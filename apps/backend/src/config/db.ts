@@ -26,7 +26,9 @@ export const connectDB = async () => {
       await seedDatabase();
     } catch (localErr: any) {
       console.warn(`Local MongoDB unavailable (${localErr.message}). Starting embedded MongoMemoryServer...`);
-      mongoServer = await MongoMemoryServer.create();
+      mongoServer = await MongoMemoryServer.create({
+        instance: { launchTimeout: 60000 }
+      });
       const memUri = mongoServer.getUri();
       const conn = await mongoose.connect(memUri);
       console.log(`MongoDB Connected (Embedded In-Memory): ${conn.connection.host}`);

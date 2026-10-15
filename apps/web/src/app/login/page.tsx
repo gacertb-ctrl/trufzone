@@ -26,10 +26,16 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [otpInfo, setOtpInfo] = useState('');
 
-  const redirectAfterLogin = () => {
+  const redirectAfterLogin = (userRole?: string) => {
     const searchParams = new URLSearchParams(window.location.search);
-    const redirect = searchParams.get('redirect') || '/';
-    router.replace(redirect);
+    const redirect = searchParams.get('redirect');
+    if (redirect) {
+      return router.replace(redirect);
+    }
+    if (userRole === 'ADVERTISER') {
+      return router.replace('/advertisements');
+    }
+    router.replace('/');
   };
 
   // 1. Password Login Handler
@@ -52,7 +58,7 @@ export default function LoginPage() {
 
       if (res.data?.success && res.data?.data) {
         login(res.data.data.token, res.data.data.user);
-        redirectAfterLogin();
+        redirectAfterLogin(res.data.data.user?.role);
       } else {
         setError(res.data?.message || 'Authentication failed. Please check credentials.');
       }

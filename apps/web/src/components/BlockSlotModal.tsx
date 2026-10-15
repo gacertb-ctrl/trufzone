@@ -15,7 +15,7 @@ interface BlockSlotModalProps {
 export function BlockSlotModal({ isOpen, onClose, onBlockSuccess, turfs: propTurfs }: BlockSlotModalProps) {
   const [turfOptions, setTurfOptions] = useState<{ id: string; name: string; location?: string }[]>(propTurfs || []);
   const [turfId, setTurfId] = useState('');
-  const [date, setDate] = useState('2026-09-08');
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [timeSlot, setTimeSlot] = useState('2:00 PM – 4:00 PM');
   const [reason, setReason] = useState('Pitch Brushing & Turf Maintenance');
   const [notes, setNotes] = useState('');

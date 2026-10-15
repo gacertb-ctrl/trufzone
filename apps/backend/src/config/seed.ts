@@ -5,7 +5,9 @@ import Booking from '../models/Booking';
 import Review from '../models/Review';
 import Offer from '../models/Offer';
 import Tournament from '../models/Tournament';
+import Advertisement from '../models/Advertisement';
 import { hashPassword } from '../controllers/authController';
+
 
 const SEED_PLAYERS = [
   { name: 'Arun Kumar', phone: '9876543210', email: 'arun.football@gmail.com' },
@@ -84,7 +86,25 @@ export const seedDatabase = async () => {
       await adminUser.save();
     }
 
+    // 1d. Seed Advertiser / Sponsor Partner
+    let advertiserUser = await User.findOne({ phone: '9842100003' } as any);
+    if (!advertiserUser) {
+      advertiserUser = await User.create({
+        name: 'Sponsor Partner',
+        phone: '9842100003',
+        email: 'sponsors@turfhub.in',
+        password: defaultPassword,
+        role: 'ADVERTISER',
+        isVerified: true
+      } as any);
+      console.log('Seeded Advertiser: Sponsor Partner');
+    } else if (!advertiserUser.password) {
+      advertiserUser.password = defaultPassword;
+      await advertiserUser.save();
+    }
+
     // 2. Seed Players
+
     const createdPlayers: any[] = [];
     for (const p of SEED_PLAYERS) {
       let player = await User.findOne({ phone: p.phone });
@@ -122,7 +142,7 @@ export const seedDatabase = async () => {
         sports: ['Football', 'Box Cricket'],
         facilities: ['FIFA Grade Turf', 'LED Floodlights', 'Changing Rooms', 'Drinking Water', 'Free Parking', 'Bibs & Balls'],
         images: [
-          'https://images.unsplash.com/photo-1529900241470-349ff08ca3cf?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=1200&q=80',
           'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80'
         ],
         status: 'ACTIVE'
@@ -141,7 +161,7 @@ export const seedDatabase = async () => {
         sports: ['Box Cricket', 'Tennis'],
         facilities: ['High Netting Enclosure', 'Bowling Machine', 'LED Lighting', 'Seating Dugouts'],
         images: [
-          'https://images.unsplash.com/photo-1531415074868-036b1c575351?auto=format&fit=crop&w=1200&q=80'
+          'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80'
         ],
         status: 'ACTIVE'
       } as any);
@@ -159,14 +179,20 @@ export const seedDatabase = async () => {
         sports: ['Football', 'Badminton'],
         facilities: ['Dual Court Layout', 'Indoor Badminton Court', 'Solar Heated Showers', 'Filtered Water'],
         images: [
-          'https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=1200&q=80'
+          'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=1200&q=80'
         ],
         status: 'ACTIVE'
       } as any);
 
       turfs = [turf1, turf2, turf3];
       console.log('Seeded 3 Turfs in Tirunelveli');
+    } else {
+      // Refresh image URLs on existing seeded turfs
+      await Turf.updateOne({ name: 'ABC Football Arena' }, { $set: { images: ['https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=1200&q=80', 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80'] } });
+      await Turf.updateOne({ name: 'Nellai Cricket Ground' }, { $set: { images: ['https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80'] } });
+      await Turf.updateOne({ name: 'GreenField Multisport Arena' }, { $set: { images: ['https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=1200&q=80'] } });
     }
+
 
     // 4. Generate Slots for Past 2 Days and Next 5 Days (Week coverage)
     const baseDate = new Date();
@@ -400,7 +426,44 @@ export const seedDatabase = async () => {
       ]);
     }
 
+    // 8. Seed Sample Advertisements for Advertiser
+    const adsCount = await Advertisement.countDocuments();
+    if (adsCount === 0 && advertiserUser) {
+      await Advertisement.create([
+        {
+          advertiserId: advertiserUser._id,
+          title: 'Nellai Pro Sports Gear 20% Off',
+          brandName: 'Nellai Sports Co.',
+          bannerUrl: 'https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=1200&q=80',
+          targetUrl: 'https://example.com/sports-gear',
+          placement: 'HERO',
+          startDate: '2026-10-01',
+          endDate: '2026-11-30',
+          budget: 15000,
+          status: 'ACTIVE',
+          impressions: 1420,
+          clicks: 184
+        },
+        {
+          advertiserId: advertiserUser._id,
+          title: 'FastRecovery Electrolytes & Hydration',
+          brandName: 'HydroSport India',
+          bannerUrl: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=1200&q=80',
+          targetUrl: 'https://example.com/hydration',
+          placement: 'SIDEBAR',
+          startDate: '2026-10-05',
+          endDate: '2026-11-15',
+          budget: 8000,
+          status: 'ACTIVE',
+          impressions: 890,
+          clicks: 96
+        }
+      ]);
+      console.log('Seeded sample advertisements');
+    }
+
     console.log('Database seeding verified successfully');
+
   } catch (err) {
     console.error('Database seeding error:', err);
   }

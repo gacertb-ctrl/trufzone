@@ -97,7 +97,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   }
 
   // 3. Role-based authorization guard (e.g. Player accessing Owner/Admin management pages)
-  if (isAuthenticated && currentRole === 'PLAYER') {
+  if (isAuthenticated && (currentRole === 'PLAYER' || currentRole === 'ADVERTISER')) {
     const isOwnerRoute = OWNER_ONLY_ROUTES.some(route => 
       pathname === route || pathname.startsWith(`${route}/`)
     );
@@ -118,17 +118,17 @@ export default function AuthGuard({ children }: AuthGuardProps) {
                 Turf Admin Access Required
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Your account is authenticated as a <strong>Player</strong>. You do not have permission to access venue configuration, financials, or ground administration tools.
+                Your account is authenticated as <strong>{currentRole === 'ADVERTISER' ? 'Advertiser Partner' : 'Player'}</strong>. You do not have permission to access venue configuration, financials, or ground administration tools.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
               <Link
-                href="/"
+                href={currentRole === 'ADVERTISER' ? '/advertisements' : '/'}
                 className="w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all flex items-center justify-center gap-1.5"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Return to Player Home</span>
+                <span>{currentRole === 'ADVERTISER' ? 'Return to Ads Dashboard' : 'Return to Player Home'}</span>
               </Link>
               <button
                 onClick={() => logout()}
@@ -143,6 +143,51 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       );
     }
   }
+
+  // 3b. Guard /advertisements route (only ADVERTISER and ADMIN allowed)
+  if (isAuthenticated && pathname.startsWith('/advertisements')) {
+    if (currentRole !== 'ADVERTISER' && currentRole !== 'ADMIN') {
+      return (
+        <div className="min-h-[70vh] flex flex-col items-center justify-center p-6">
+          <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl bg-card border border-rose-500/30 shadow-2xl text-center space-y-5 relative overflow-hidden">
+            <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center mx-auto">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                403 Forbidden
+              </span>
+              <h2 className="text-xl font-black text-foreground">
+                Advertiser Portal Access Restricted
+              </h2>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Your account ({currentRole}) does not have permission to manage platform advertisements and marketing campaigns.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
+              <Link
+                href="/"
+                className="w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Return to Home</span>
+              </Link>
+              <button
+                onClick={() => logout()}
+                className="w-full py-2.5 px-4 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+              >
+                <LogOut className="w-4 h-4 text-rose-500" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+  }
+
 
   // 4. Authorized, render page
   return <>{children}</>;

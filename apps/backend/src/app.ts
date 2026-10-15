@@ -9,6 +9,7 @@ import bookingRoutes from './routes/bookingRoutes';
 import authRoutes from './routes/authRoutes';
 import turfRoutes from './routes/turfRoutes';
 import ownerRoutes from './routes/ownerRoutes';
+import adRoutes from './routes/adRoutes';
 
 const app = express();
 
@@ -89,6 +90,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/turfs', turfRoutes);
 app.use('/api/owner', ownerRoutes);
+app.use('/api/ads', adRoutes);
 
 export default app;
 

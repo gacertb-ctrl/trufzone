@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { 
-  getDashboardStats, createTurf, generateSlots, 
+  getDashboardStats, createTurf, updateTurf, deleteTurf, generateSlots, 
   getOwnerTurfs, getOwnerBookings, createOfflineBooking,
   blockSlot, updateBookingStatus, getOwnerCustomers,
   seedRandomMatches, getOwnerReviews, addReviewReply,
@@ -21,8 +21,11 @@ router.get('/dashboard', requireRole(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN', 'STAF
 // 2. Turfs & Ground Operations
 router.get('/turfs', requireRole(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN', 'STAFF']), getOwnerTurfs);
 router.post('/turfs', requireRole(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN']), createTurf);
+router.put('/turfs/:id', requireRole(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN']), updateTurf);
+router.delete('/turfs/:id', requireRole(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN']), deleteTurf);
 router.post('/slots', requireRole(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN', 'STAFF']), generateSlots);
 router.post('/slots/block', requireRole(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN', 'STAFF']), blockSlot);
+
 
 // 3. Bookings
 router.get('/bookings', requireRole(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN', 'STAFF']), getOwnerBookings);
