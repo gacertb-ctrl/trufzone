@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { getPublicTurfDetails } from '@/services/api';
+import { getPublicTurfDetails, updateOwnerTurf } from '@/services/api';
 import { cn } from '@/lib/utils';
 
 export default function TurfEditorPage() {
@@ -19,6 +19,8 @@ export default function TurfEditorPage() {
   const turfId = params?.id as string;
 
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'media' | 'sports' | 'pricing' | 'policies'>('basic');
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -87,10 +89,34 @@ export default function TurfEditorPage() {
     setSelectedFacilities(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
   };
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2500);
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await updateOwnerTurf(turfId, {
+        name,
+        description,
+        locationDetails: location,
+        city,
+        pricePerHour: Number(pricePerHour) || 1000,
+        sports: selectedSports,
+        facilities: selectedFacilities,
+        images: images.length > 0 ? images : undefined,
+      });
+      if (res.data?.success) {
+        setSavedSuccess(true);
+        setTimeout(() => setSavedSuccess(false), 3000);
+      } else {
+        setSaveError('Failed to save turf modifications.');
+      }
+    } catch (err: any) {
+      console.error('Error saving turf:', err);
+      setSaveError(err.response?.data?.message || 'Failed to save changes. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -163,11 +189,12 @@ export default function TurfEditorPage() {
             Public Page
           </Link>
           <button
-            onClick={handleSave}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary-hover transition-colors shadow-sm"
+            onClick={() => handleSave()}
+            disabled={saving}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary-hover transition-colors shadow-sm disabled:opacity-60"
           >
-            <Save className="w-3.5 h-3.5" />
-            Save Changes
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
       </div>
@@ -176,6 +203,13 @@ export default function TurfEditorPage() {
         <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold flex items-center gap-2">
           <Check className="w-4 h-4" />
           Venue profile and settings have been saved successfully!
+        </div>
+      )}
+
+      {saveError && (
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-bold flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          {saveError}
         </div>
       )}
 
@@ -463,9 +497,11 @@ export default function TurfEditorPage() {
           </button>
           <button
             type="submit"
-            className="px-6 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:bg-primary-hover transition-colors shadow-sm"
+            disabled={saving}
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:bg-primary-hover transition-colors shadow-sm disabled:opacity-60 flex items-center gap-1.5"
           >
-            Save Changes
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            {saving ? 'Saving Changes...' : 'Save Changes'}
           </button>
         </div>
 

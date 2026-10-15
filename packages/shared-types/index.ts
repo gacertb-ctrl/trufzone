@@ -91,3 +91,22 @@ export interface IBooking {
   updatedAt: Date;
 }
 
+export interface IAdvertisement {
+  _id: string;
+  advertiserId: string;
+  title: string;
+  brandName: string;
+  bannerUrl: string;
+  targetUrl: string;
+  placement: 'HERO' | 'HOME_HERO' | 'SIDEBAR' | 'POPUP' | 'FOOTER' | 'SEARCH_BANNER';
+  startDate: string;
+  endDate: string;
+  budget: number;
+  status: 'ACTIVE' | 'PAUSED' | 'PENDING' | 'EXPIRED';
+  impressions: number;
+  clicks: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+

@@ -9,7 +9,7 @@ import {
   Lightbulb, ShieldCheck, PlayCircle, BookCheck,
   ChevronDown, ArrowUpRight, Filter, Sparkles,
   Layers, CheckCircle2, Flame, RefreshCw, BarChart2,
-  Calendar as CalendarIcon, Tag, Database
+  Calendar as CalendarIcon, Tag, Database, Trophy, HelpCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -31,7 +31,8 @@ import { useUserRole } from '@/context/UserRoleContext';
 
 export default function Dashboard() {
   const router = useRouter();
-  const { currentRole, user: currentPersona, isStaff, isPlayer, isAdmin, isOwner, isAuthenticated } = useUserRole();
+  const { currentRole, user: currentPersona, isStaff, isPlayer, isAdmin, isOwner, isAdvertiser, canOperateGround, isAuthenticated } = useUserRole();
+
 
   // State
   const [selectedTurfId, setSelectedTurfId] = useState<string>('all');
@@ -120,9 +121,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (isAuthenticated) {
+      if (currentRole === 'ADVERTISER') {
+        router.replace('/advertisements');
+        return;
+      }
       fetchLiveDashboardData();
     }
-  }, [isAuthenticated, currentRole]);
+  }, [isAuthenticated, currentRole, router]);
 
   // Active turf calculation
   const activeTurf = useMemo(() => {
@@ -442,6 +447,37 @@ export default function Dashboard() {
         </div>
       )}
 
+      {isAdvertiser && (
+        <div className="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-base shrink-0">
+              📢
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase text-sky-400">Advertiser & Partner Portal</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-bold">Brand Partner</span>
+              </div>
+              <p className="text-xs text-foreground font-semibold mt-0.5">
+                Welcome, <strong>{currentPersona?.name || 'Sponsor Partner'}</strong> ({currentPersona?.title || 'Brand Director'})
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Launch sports arena ad campaigns, manage promotional banners, and monitor click-through metrics.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <Link
+              href="/advertisements"
+              className="flex-1 sm:flex-none py-2 px-4 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-xs"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>Manage Ad Campaigns</span>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* TOP BAR: TURF SELECTOR STRIP WITH DATABASE STATUS */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card p-4 rounded-2xl border border-border shadow-xs">
         <div className="flex flex-wrap items-center gap-3">
@@ -488,22 +524,27 @@ export default function Dashboard() {
             Refresh
           </button>
 
-          <button
-            onClick={() => setIsOfflineDrawerOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary-hover transition-colors shadow-sm"
-          >
-            <PlusCircle className="w-4 h-4" />
-            Offline Booking
-          </button>
-          <button
-            onClick={() => setIsBlockModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border bg-muted/40 hover:bg-muted text-foreground font-bold text-xs transition-colors"
-          >
-            <AlertCircle className="w-4 h-4 text-warning" />
-            Block Slot
-          </button>
+          {canOperateGround && (
+            <>
+              <button
+                onClick={() => setIsOfflineDrawerOpen(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary-hover transition-colors shadow-sm"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Offline Booking
+              </button>
+              <button
+                onClick={() => setIsBlockModalOpen(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border bg-muted/40 hover:bg-muted text-foreground font-bold text-xs transition-colors"
+              >
+                <AlertCircle className="w-4 h-4 text-warning" />
+                Block Slot
+              </button>
+            </>
+          )}
         </div>
       </div>
+
 
       {/* 1. DASHBOARD HERO */}
       <div className="relative overflow-hidden rounded-3xl bg-zinc-950 text-white shadow-2xl border border-zinc-800 p-6 sm:p-8 lg:p-10">
@@ -1034,48 +1075,96 @@ export default function Dashboard() {
           {/* Quick Actions Grid */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base sm:text-lg">Quick Actions</CardTitle>
+              <CardTitle className="text-base sm:text-lg">
+                {isPlayer ? 'Player Shortcuts' : 'Quick Actions'}
+              </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-2.5 p-4 pt-0">
-              <button
-                onClick={() => setIsOfflineDrawerOpen(true)}
-                className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-border bg-card hover:bg-muted transition-all group gap-2 text-center"
-              >
-                <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <PlusCircle className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-bold text-foreground">Add Booking</span>
-              </button>
+              {isPlayer ? (
+                <>
+                  <button
+                    onClick={() => router.push('/public')}
+                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-border bg-card hover:bg-muted transition-all group gap-2 text-center"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold text-foreground">Explore Turfs</span>
+                  </button>
 
-              <button
-                onClick={() => setIsBlockModalOpen(true)}
-                className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-border bg-card hover:bg-muted transition-all group gap-2 text-center"
-              >
-                <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <AlertCircle className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-bold text-foreground">Block Slot</span>
-              </button>
+                  <button
+                    onClick={() => router.push('/bookings')}
+                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-border bg-card hover:bg-muted transition-all group gap-2 text-center"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <BookCheck className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold text-foreground">My Passes</span>
+                  </button>
 
-              <button
-                onClick={() => setIsOfferModalOpen(true)}
-                className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-border bg-card hover:bg-muted transition-all group gap-2 text-center"
-              >
-                <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Tag className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-bold text-foreground">Create Offer</span>
-              </button>
+                  <button
+                    onClick={() => router.push('/tournaments')}
+                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-border bg-card hover:bg-muted transition-all group gap-2 text-center"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Trophy className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold text-foreground">Tournaments</span>
+                  </button>
 
-              <button
-                onClick={() => router.push('/turfs/create')}
-                className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-border bg-card hover:bg-muted transition-all group gap-2 text-center"
-              >
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <MapPin className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-bold text-foreground">Add Turf</span>
-              </button>
+                  <button
+                    onClick={() => router.push('/support')}
+                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-border bg-card hover:bg-muted transition-all group gap-2 text-center"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <HelpCircle className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold text-foreground">Help Center</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setIsOfflineDrawerOpen(true)}
+                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-border bg-card hover:bg-muted transition-all group gap-2 text-center"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <PlusCircle className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold text-foreground">Add Booking</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsBlockModalOpen(true)}
+                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-border bg-card hover:bg-muted transition-all group gap-2 text-center"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <AlertCircle className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold text-foreground">Block Slot</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsOfferModalOpen(true)}
+                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-border bg-card hover:bg-muted transition-all group gap-2 text-center"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Tag className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold text-foreground">Create Offer</span>
+                  </button>
+
+                  <button
+                    onClick={() => router.push('/turfs/create')}
+                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-border bg-card hover:bg-muted transition-all group gap-2 text-center"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold text-foreground">Add Turf</span>
+                  </button>
+                </>
+              )}
             </CardContent>
           </Card>
 

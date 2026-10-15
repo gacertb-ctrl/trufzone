@@ -419,6 +419,130 @@ async function runTests() {
     );
   }
 
+  // Test 23: Advertiser Login & Role Validation
+  let advertiserToken = '';
+  try {
+    const adLoginRes = await axios.post(`${BASE_URL}/auth/login`, {
+      identifier: '9842100003',
+      password: 'password123',
+    });
+    advertiserToken = adLoginRes.data?.data?.token;
+    const role = adLoginRes.data?.data?.user?.role;
+    assert(
+      adLoginRes.status === 200 && Boolean(advertiserToken) && role === 'ADVERTISER',
+      'Advertiser account login succeeds with ADVERTISER role',
+      `Role: ${role}, User: ${adLoginRes.data?.data?.user?.name}`
+    );
+  } catch (err: any) {
+    assert(false, 'Advertiser account login succeeds', err.response?.data?.message || err.message);
+  }
+
+  // Test 24: Advertiser Campaign Creation & Retrieval (POST /api/ads & GET /api/ads)
+  let createdAdId = '';
+  try {
+    const createAdRes = await axios.post(
+      `${BASE_URL}/ads`,
+      {
+        title: 'Monsoon 5v5 Tournament Sponsor',
+        description: 'Exclusive football boots discount',
+        bannerUrl: 'https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=800',
+        targetUrl: 'https://decathlon.in',
+        placement: 'HOME_HERO',
+        budget: 7500,
+      },
+      { headers: { Authorization: `Bearer ${advertiserToken}` } }
+    );
+    createdAdId = createAdRes.data?.data?._id;
+    assert(
+      createAdRes.status === 201 && Boolean(createdAdId),
+      'Advertiser can create advertising campaign via POST /api/ads',
+      `Ad ID: ${createdAdId}`
+    );
+
+    const getAdsRes = await axios.get(`${BASE_URL}/ads`, {
+      headers: { Authorization: `Bearer ${advertiserToken}` },
+    });
+    const adCount = getAdsRes.data?.data?.length;
+    assert(
+      getAdsRes.status === 200 && Array.isArray(getAdsRes.data?.data) && adCount > 0,
+      'Advertiser retrieves own campaigns via GET /api/ads',
+      `Count: ${adCount}`
+    );
+  } catch (err: any) {
+    assert(false, 'Advertiser campaign creation & retrieval succeeds', err.response?.data?.message || err.message);
+  }
+
+  // Test 25: Public Active Ads Retrieval (GET /api/ads/public/active)
+  try {
+    const publicAdsRes = await axios.get(`${BASE_URL}/ads/public/active`);
+    assert(
+      publicAdsRes.status === 200 && Array.isArray(publicAdsRes.data?.data) && publicAdsRes.data.data.length > 0,
+      'Public endpoint /api/ads/public/active returns active sponsorships without auth',
+      `Active ads count: ${publicAdsRes.data?.data?.length}`
+    );
+  } catch (err: any) {
+    assert(false, 'Public endpoint /api/ads/public/active returns active ads', err.response?.data?.message || err.message);
+  }
+
+  // Test 26: IDOR Protection on Advertisements (Player cannot modify or delete advertiser ad)
+  try {
+    await axios.put(
+      `${BASE_URL}/ads/${createdAdId}`,
+      { title: 'Hacked Campaign' },
+      { headers: { Authorization: `Bearer ${playerToken}` } }
+    );
+    assert(false, 'Player must be forbidden from updating advertiser ad', 'Player updated ad with 200 OK!');
+  } catch (err: any) {
+    assert(
+      err.response?.status === 403,
+      'Player forbidden from updating advertiser campaign (IDOR Protection: 403)',
+      `Status: ${err.response?.status}`
+    );
+  }
+
+  // Test 27: Turf Owner Update (PUT /api/owner/turfs/:id)
+  let activeOwnerToken = '';
+  try {
+    // Re-login owner to get active token
+    const ownerReLogin = await axios.post(`${BASE_URL}/auth/login`, {
+      identifier: '9443182940',
+      password: 'password123',
+    });
+    activeOwnerToken = ownerReLogin.data?.data?.token;
+
+    const updateTurfRes = await axios.put(
+      `${BASE_URL}/owner/turfs/${publicTurfId}`,
+      {
+        name: 'ABC Premier Sports Arena - Renovated',
+        pricePerHour: 1100,
+      },
+      { headers: { Authorization: `Bearer ${activeOwnerToken}` } }
+    );
+    assert(
+      updateTurfRes.status === 200 && updateTurfRes.data?.success && updateTurfRes.data?.data?.name === 'ABC Premier Sports Arena - Renovated',
+      'Turf Owner can successfully update venue details via PUT /api/owner/turfs/:id',
+      `Updated Name: ${updateTurfRes.data?.data?.name}`
+    );
+  } catch (err: any) {
+    assert(false, 'Turf Owner update venue details succeeds', err.response?.data?.message || err.message);
+  }
+
+  // Test 28: IDOR Protection on Turf Venues (Player cannot modify turf venue -> 403)
+  try {
+    await axios.put(
+      `${BASE_URL}/owner/turfs/${publicTurfId}`,
+      { name: 'Hacked Turf Name' },
+      { headers: { Authorization: `Bearer ${playerToken}` } }
+    );
+    assert(false, 'Player must be forbidden from updating owner turf venue', 'Player updated turf with 200 OK!');
+  } catch (err: any) {
+    assert(
+      err.response?.status === 403,
+      'Player forbidden from updating turf venue (IDOR Protection: 403)',
+      `Status: ${err.response?.status}`
+    );
+  }
+
   // Summary
   console.log('\n======================================================');
   console.log('TEST SUMMARY');

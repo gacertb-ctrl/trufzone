@@ -124,6 +124,25 @@ export default function ReportsPage() {
     }
   };
 
+  if (isAuthenticated && !canViewFinancials) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6 space-y-4">
+        <div className="w-16 h-16 rounded-2xl bg-danger/10 border border-danger/20 flex items-center justify-center text-danger">
+          <Award className="w-8 h-8" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-2xl font-black text-foreground">403 — Access Forbidden (RBAC Shield)</h2>
+          <p className="text-sm text-muted-foreground max-w-md">
+            Commercial financial intelligence and revenue analytics are exclusively reserved for Turf Owners and Platform Super Admins.
+          </p>
+        </div>
+        <a href="/" className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition-all">
+          Return to Home
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 pb-12">
       

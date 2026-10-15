@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { 
   Plus, MapPin, Star, Users, IndianRupee, Clock,
   Settings, Calendar, ExternalLink, Sparkles,
-  ShieldCheck, CheckCircle2, ChevronRight, Database, RefreshCw
+  ShieldCheck, CheckCircle2, ChevronRight, Database, RefreshCw, Edit2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -171,6 +171,9 @@ export default function TurfsHubPage() {
                   src={turf.image}
                   alt={turf.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=800';
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 
@@ -251,20 +254,27 @@ export default function TurfsHubPage() {
 
                 {/* Actions Grid */}
                 <div className="space-y-2 pt-2 border-t border-border">
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
+                    <button 
+                      onClick={() => router.push(`/turfs/${turf.id}`)}
+                      className="flex items-center justify-center px-2 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground font-bold rounded-xl text-xs transition-colors"
+                    >
+                      <Edit2 className="w-3.5 h-3.5 mr-1" />
+                      Edit
+                    </button>
                     <button 
                       onClick={() => router.push(`/turfs/${turf.id}/slots`)}
-                      className="flex items-center justify-center px-3 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground font-bold rounded-xl text-xs transition-colors"
+                      className="flex items-center justify-center px-2 py-2 border border-border text-foreground hover:bg-muted font-bold rounded-xl text-xs transition-colors"
                     >
-                      <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                      Slot Schedule
+                      <Calendar className="w-3.5 h-3.5 mr-1" />
+                      Slots
                     </button>
                     <button 
                       onClick={() => router.push(`/turfs/${turf.id}/pricing`)}
-                      className="flex items-center justify-center px-3 py-2 border border-border text-foreground hover:bg-muted font-bold rounded-xl text-xs transition-colors"
+                      className="flex items-center justify-center px-2 py-2 border border-border text-foreground hover:bg-muted font-bold rounded-xl text-xs transition-colors"
                     >
-                      <Settings className="w-3.5 h-3.5 mr-1.5" />
-                      Pricing Rules
+                      <Settings className="w-3.5 h-3.5 mr-1" />
+                      Pricing
                     </button>
                   </div>
 
