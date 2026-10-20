@@ -795,7 +795,7 @@ export const updateTournamentTeamStatus = async (req: AuthRequest, res: Response
     }
 
     team.status = status;
-    tournament.registeredCount = tournament.registeredTeams.filter(t => t.status !== 'CONFIRMED' || t.status === 'APPROVED').length;
+    tournament.registeredCount = tournament.registeredTeams.filter(t => (t.status as string) === 'CONFIRMED' || (t.status as string) === 'APPROVED').length;
     await tournament.save();
 
     res.status(200).json({ success: true, message: `Team status updated to ${status}`, data: tournament });

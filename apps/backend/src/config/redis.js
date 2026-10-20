@@ -1,12 +1,9 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const ioredis_1 = __importDefault(require("ioredis"));
+var ioredis_1 = require("ioredis");
 // @ts-ignore
-const ioredis_mock_1 = __importDefault(require("ioredis-mock"));
-let redisInstance;
+var ioredis_mock_1 = require("ioredis-mock");
+var redisInstance;
 try {
     if (process.env.NODE_ENV === 'test' || process.env.USE_REDIS_MOCK === 'true' || !process.env.REDIS_URL) {
         redisInstance = new ioredis_mock_1.default();
@@ -15,9 +12,9 @@ try {
     else {
         redisInstance = new ioredis_1.default(process.env.REDIS_URL, {
             maxRetriesPerRequest: 1,
-            retryStrategy: () => null, // don't retry endlessly if redis not running
+            retryStrategy: function () { return null; }, // don't retry endlessly if redis not running
         });
-        redisInstance.on('error', (err) => {
+        redisInstance.on('error', function (err) {
             console.warn('Redis warning (using fallback mock if offline):', err.message);
         });
     }

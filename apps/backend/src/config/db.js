@@ -8,52 +8,111 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
+    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.closeDB = exports.connectDB = void 0;
-const mongoose_1 = __importDefault(require("mongoose"));
-const mongodb_memory_server_1 = require("mongodb-memory-server");
-const seed_1 = require("./seed");
-let mongoServer = null;
-const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/turfhub';
-        if (process.env.NODE_ENV === 'test') {
-            mongoServer = yield mongodb_memory_server_1.MongoMemoryServer.create();
-            const uri = mongoServer.getUri();
-            yield mongoose_1.default.connect(uri);
-            console.log('MongoDB: Connected to in-memory test database');
-            yield (0, seed_1.seedDatabase)();
-            return;
+var mongoose_1 = require("mongoose");
+var mongodb_memory_server_1 = require("mongodb-memory-server");
+var seed_1 = require("./seed");
+var mongoServer = null;
+var connectDB = function () { return __awaiter(void 0, void 0, void 0, function () {
+    var mongoUri, uri, conn, localErr_1, memUri, conn, error_1;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                _a.trys.push([0, 12, , 13]);
+                mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/turfhub';
+                if (!(process.env.NODE_ENV === 'test')) return [3 /*break*/, 4];
+                return [4 /*yield*/, mongodb_memory_server_1.MongoMemoryServer.create()];
+            case 1:
+                mongoServer = _a.sent();
+                uri = mongoServer.getUri();
+                return [4 /*yield*/, mongoose_1.default.connect(uri)];
+            case 2:
+                _a.sent();
+                console.log('MongoDB: Connected to in-memory test database');
+                return [4 /*yield*/, (0, seed_1.seedDatabase)()];
+            case 3:
+                _a.sent();
+                return [2 /*return*/];
+            case 4:
+                _a.trys.push([4, 7, , 11]);
+                return [4 /*yield*/, mongoose_1.default.connect(mongoUri, {
+                        serverSelectionTimeoutMS: 2000
+                    })];
+            case 5:
+                conn = _a.sent();
+                console.log("MongoDB Connected: ".concat(conn.connection.host));
+                return [4 /*yield*/, (0, seed_1.seedDatabase)()];
+            case 6:
+                _a.sent();
+                return [3 /*break*/, 11];
+            case 7:
+                localErr_1 = _a.sent();
+                console.warn("Local MongoDB unavailable (".concat(localErr_1.message, "). Starting embedded MongoMemoryServer..."));
+                return [4 /*yield*/, mongodb_memory_server_1.MongoMemoryServer.create({
+                        instance: { launchTimeout: 60000 }
+                    })];
+            case 8:
+                mongoServer = _a.sent();
+                memUri = mongoServer.getUri();
+                return [4 /*yield*/, mongoose_1.default.connect(memUri)];
+            case 9:
+                conn = _a.sent();
+                console.log("MongoDB Connected (Embedded In-Memory): ".concat(conn.connection.host));
+                return [4 /*yield*/, (0, seed_1.seedDatabase)()];
+            case 10:
+                _a.sent();
+                return [3 /*break*/, 11];
+            case 11: return [3 /*break*/, 13];
+            case 12:
+                error_1 = _a.sent();
+                console.error("MongoDB Connection Error: ".concat(error_1.message));
+                return [3 /*break*/, 13];
+            case 13: return [2 /*return*/];
         }
-        try {
-            // Try local MongoDB with short timeout
-            const conn = yield mongoose_1.default.connect(mongoUri, {
-                serverSelectionTimeoutMS: 2000
-            });
-            console.log(`MongoDB Connected: ${conn.connection.host}`);
-            yield (0, seed_1.seedDatabase)();
-        }
-        catch (localErr) {
-            console.warn(`Local MongoDB unavailable (${localErr.message}). Starting embedded MongoMemoryServer...`);
-            mongoServer = yield mongodb_memory_server_1.MongoMemoryServer.create();
-            const memUri = mongoServer.getUri();
-            const conn = yield mongoose_1.default.connect(memUri);
-            console.log(`MongoDB Connected (Embedded In-Memory): ${conn.connection.host}`);
-            yield (0, seed_1.seedDatabase)();
-        }
-    }
-    catch (error) {
-        console.error(`MongoDB Connection Error: ${error.message}`);
-    }
-});
+    });
+}); };
 exports.connectDB = connectDB;
-const closeDB = () => __awaiter(void 0, void 0, void 0, function* () {
-    yield mongoose_1.default.disconnect();
-    if (mongoServer) {
-        yield mongoServer.stop();
-    }
-});
+var closeDB = function () { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, mongoose_1.default.disconnect()];
+            case 1:
+                _a.sent();
+                if (!mongoServer) return [3 /*break*/, 3];
+                return [4 /*yield*/, mongoServer.stop()];
+            case 2:
+                _a.sent();
+                _a.label = 3;
+            case 3: return [2 /*return*/];
+        }
+    });
+}); };
 exports.closeDB = closeDB;

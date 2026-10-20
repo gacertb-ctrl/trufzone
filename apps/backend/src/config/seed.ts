@@ -458,7 +458,7 @@ export const seedDatabase = async () => {
           impressions: 890,
           clicks: 96
         }
-      ]);
+      ] as any);
       console.log('Seeded sample advertisements');
     }
 
