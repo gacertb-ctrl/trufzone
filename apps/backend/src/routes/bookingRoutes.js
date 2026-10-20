@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const bookingController_1 = require("../controllers/bookingController");
-const authMiddleware_1 = require("../middleware/authMiddleware");
-const router = (0, express_1.Router)();
+var express_1 = require("express");
+var bookingController_1 = require("../controllers/bookingController");
+var authMiddleware_1 = require("../middleware/authMiddleware");
+var router = (0, express_1.Router)();
 // Public booking endpoint (open to players / guests)
 router.post('/public', bookingController_1.publicBookTurf);
 // Protected routes (require user authentication)

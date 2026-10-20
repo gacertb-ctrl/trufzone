@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const ownerController_1 = require("../controllers/ownerController");
-const authMiddleware_1 = require("../middleware/authMiddleware");
-const router = (0, express_1.Router)();
+var express_1 = require("express");
+var ownerController_1 = require("../controllers/ownerController");
+var authMiddleware_1 = require("../middleware/authMiddleware");
+var router = (0, express_1.Router)();
 // Protect all routes with auth
 router.use(authMiddleware_1.requireAuth);
 // 1. Dashboard & Stats (Owner, Admin, Staff only)
@@ -11,6 +11,8 @@ router.get('/dashboard', (0, authMiddleware_1.requireRole)(['TURF_OWNER', 'TURF_
 // 2. Turfs & Ground Operations
 router.get('/turfs', (0, authMiddleware_1.requireRole)(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN', 'STAFF']), ownerController_1.getOwnerTurfs);
 router.post('/turfs', (0, authMiddleware_1.requireRole)(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN']), ownerController_1.createTurf);
+router.put('/turfs/:id', (0, authMiddleware_1.requireRole)(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN']), ownerController_1.updateTurf);
+router.delete('/turfs/:id', (0, authMiddleware_1.requireRole)(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN']), ownerController_1.deleteTurf);
 router.post('/slots', (0, authMiddleware_1.requireRole)(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN', 'STAFF']), ownerController_1.generateSlots);
 router.post('/slots/block', (0, authMiddleware_1.requireRole)(['TURF_OWNER', 'TURF_ADMIN', 'ADMIN', 'STAFF']), ownerController_1.blockSlot);
 // 3. Bookings
